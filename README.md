@@ -1,23 +1,285 @@
-Compiler Lab Tools
+# Predictive Parsing Compiler Lab
+
+A comprehensive compiler implementation demonstrating all phases of compilation: lexical analysis, syntax analysis, semantic analysis, intermediate code generation, optimization, and target code generation.
+
+## Project Overview
+
 This project implements:
+- **Left Recursion Removal** - Eliminates left recursion from grammar
+- **Left Factoring** - Factors out common prefixes in productions
+- **FIRST Set Computation** - Computes FIRST sets for non-terminals
+- **FOLLOW Set Computation** - Computes FOLLOW sets for non-terminals
+- **Complete Compiler** - Multi-phase compiler with full compilation pipeline
 
-Removal of Left Recursion
-Left Factoring
-FIRST Set Computation
-FOLLOW Set Computation
-How to Run
-Place grammar in grammar_input.txt
-Run:
-python left_recursion.py python left_factoring.py python first_follow.py
+## Files
 
-Grammar Format
-Use:
+```
+README.md                    # This file
+simple.y                     # Yacc grammar specification
+lexer.c                      # Lexical analyzer implementation
+simple.I                     # Lex specification (reference)
+predictive parsing/          # Parser utilities
+  ├── first_follow.py        # FIRST/FOLLOW set computation
+  ├── left_factoring.py      # Left factoring transformation
+  ├── left_recursion.py      # Left recursion removal
+  └── grammar_input.txt      # Sample grammar
+```
 
-for epsilon
--> for production | for alternatives
+## How to Build and Run
 
-Example:
+
+
+```bash
+cd /workspaces/predictive-parsing
+bison -d simple.y
+gcc simple.tab.c lexer.c -o compiler -lm
+```
+
+### Run the Compiler
+
+```bash
+./compiler
+```
+
+Then enter your program and press Ctrl+D when done.
+
+## Supported Syntax
+
+### Keywords
+- `int`, `float`, `if`, `else`, `while`, `return`
+
+### Operators
+- Arithmetic: `+`, `-`, `*`, `/`
+- Assignment: `=`
+- Comparison: `<`, `>`
+
+### Delimiters
+- `;`, `(`, `)`, `{`, `}`
+
+### Example Program
+
+```c
+int x;
+int y;
+x = 10;
+y = x * 2;
+int z;
+z = x + y;
+```
+
+## Compilation Output Example
+
+When you run the compiler with the above program, you'll see:
+
+```
+Enter program (Ctrl+D to finish):
+
+========== 1. LEXICAL ANALYSIS ==========
+KEYWORD int
+IDENTIFIER x
+DELIM ;
+KEYWORD int
+IDENTIFIER y
+DELIM ;
+IDENTIFIER x
+OP =
+INTEGER 10
+DELIM ;
+IDENTIFIER y
+OP =
+IDENTIFIER x
+OP *
+INTEGER 2
+DELIM ;
+KEYWORD int
+IDENTIFIER z
+DELIM ;
+IDENTIFIER z
+OP =
+IDENTIFIER x
+OP +
+IDENTIFIER y
+DELIM ;
+
+========== 2. SYNTAX ANALYSIS ==========
+KEYWORD int
+IDENTIFIER x
+DELIM ;
+KEYWORD int
+IDENTIFIER y
+DELIM ;
+IDENTIFIER x
+OP =
+INTEGER 10
+DELIM ;
+x = 10
+IDENTIFIER y
+OP =
+IDENTIFIER x
+OP *
+INTEGER 2
+DELIM ;
+t0 = x * 2
+y = t0
+KEYWORD int
+IDENTIFIER z
+DELIM ;
+IDENTIFIER z
+OP =
+IDENTIFIER x
+OP +
+IDENTIFIER y
+DELIM ;
+t1 = x + y
+z = t1
+Syntax is valid
+
+========== 3. SEMANTIC ANALYSIS ==========
+Semantic checks passed
+
+========== 4. INTERMEDIATE CODE ==========
+KEYWORD int
+IDENTIFIER x
+DELIM ;
+KEYWORD int
+IDENTIFIER y
+DELIM ;
+IDENTIFIER x
+OP =
+INTEGER 10
+DELIM ;
+x = 10
+IDENTIFIER y
+OP =
+IDENTIFIER x
+OP *
+INTEGER 2
+DELIM ;
+t2 = x * 2
+y = t2
+KEYWORD int
+IDENTIFIER z
+DELIM ;
+IDENTIFIER z
+OP =
+IDENTIFIER x
+OP +
+IDENTIFIER y
+DELIM ;
+t3 = x + y
+z = t3
+
+========== 5. OPTIMIZATION ==========
+Constant folding applied
+
+========== 6. TARGET CODE ==========
+MOV R1, result
+```
+
+## Compilation Phases Explained
+
+### Phase 1: Lexical Analysis
+Converts input stream into tokens (keywords, identifiers, operators, delimiters).
+
+### Phase 2: Syntax Analysis
+Parses tokens according to grammar rules and generates intermediate code with temp variables for expressions.
+
+### Phase 3: Semantic Analysis
+Performs semantic checks such as:
+- Variable declaration validation
+- Type compatibility (when applicable)
+
+### Phase 4: Intermediate Code Generation
+Generates 3-address code using temp variables (t0, t1, t2, ...).
+
+### Phase 5: Optimization
+Applies optimizations such as:
+- Constant folding
+- Dead code elimination
+
+### Phase 6: Target Code Generation
+Converts intermediate code to target assembly-like code.
+
+## Grammar Utilities
+
+### Run FIRST/FOLLOW Computation
+
+```bash
+cd "predictive parsing"
+python first_follow.py
+```
+
+Output:
+```
+FIRST Sets:
+
+S : {'b'}
+A : {'b'}
+B : {'b'}
+
+FOLLOW Sets:
+
+S : {'$'}
+A : {'b', 'a'}
+B : {'$'}
+```
+
+### Remove Left Recursion
+
+```bash
+cd "predictive parsing"
+python left_recursion.py
+```
+
+Output:
+```
+Grammar after removing Left Recursion:
+
+S -> A B
+A -> b A'
+A' -> a A' | #
+B -> b
+```
+
+### Apply Left Factoring
+
+```bash
+cd "predictive parsing"
+python left_factoring.py
+```
+
+Output:
+```
+Grammar after Left Factoring:
 
 S -> A B
 A -> A a | b
 B -> b
+```
+
+## Error Detection
+
+The compiler detects and reports:
+
+1. **Lexical Errors** - Invalid characters or tokens
+2. **Syntax Errors** - Invalid program structure
+3. **Semantic Errors** - Undefined variables, type mismatches
+
+If any error is encountered, compilation stops at that phase.
+
+## Implementation Details
+
+- **Lexer**: Hand-written in C (custom implementation)
+- **Parser**: Generated by Bison from Yacc grammar
+- **Symbol Table**: Simple array-based implementation
+- **Intermediate Code**: 3-address code format
+- **Temp Variables**: Automatically generated as t0, t1, t2, ...
+
+## Notes
+
+- Bison warnings about shift/reduce conflicts are expected for this simplified grammar
+- The compiler uses predictive parsing with Yacc/Bison
+- Grammar input file format: `-> for productions`, `| for alternatives`, `# for epsilon`
+
+## Author
+Aravindrm2019
